@@ -5,16 +5,27 @@ import { formatResponse } from "./utils/formatResponse.js";
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://next-portfolio-dashboard-octobyte.vercel.app",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(express.json());
 
 app.use("/api", portfolioRoutes);
 
 // 404 — route not found
 app.use((req, res) => {
-  formatResponse.error(res, "Not found", 404, "This route is not found", {
-    path: req.originalUrl,
-  });
+  return formatResponse(
+    { message: "This route is not found", statusCode: 404, content: { path: req.originalUrl } },
+    res,
+    true,
+  );
 });
 
 const PORT = process.env.PORT ?? 5000;
