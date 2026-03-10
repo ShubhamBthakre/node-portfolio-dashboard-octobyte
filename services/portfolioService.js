@@ -3,16 +3,26 @@ import { getStockData } from "./stockService.js";
 import { CustomError } from "../utils/CustomError.js";
 import { httpStatusCodes } from "../utils/httpStatusCodes.js";
 
+const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Run async tasks in small batches with delay to avoid Yahoo 429 rate limit. */
+async function runThrottled(tasks, concurrency = 2, delayMs = 700) {
+  const results = [];
+  for (let i = 0; i < tasks.length; i += concurrency) {
+    const batch = tasks.slice(i, i + concurrency);
+    const batchResults = await Promise.all(batch.map((fn) => fn()));
+    results.push(...batchResults);
+    if (i + concurrency < tasks.length) await delay(delayMs);
+  }
+  return results;
+}
+
 export async function fetchPortfolioEnriched() {
   try {
-    const results = await Promise.all(
-      portfolioData.map(async (stock) => {
+    const results = await runThrottled(
+      portfolioData.map((stock) => async () => {
         const market = await getStockData(stock.symbol);
-
-        console.log("market", market);
-        if (!market || market.cmp == null) {
-          return null;
-        }
+        if (!market || market.cmp == null) return null;
         const investment = stock.purchasePrice * stock.quantity;
         const presentValue = market.cmp * stock.quantity;
         const gainLoss = presentValue - investment;
@@ -30,9 +40,9 @@ export async function fetchPortfolioEnriched() {
           dayChangePercent,
         };
       }),
+      2,
+      700,
     );
-
-    console.log("results", results);
 
     const portfolio = results.filter(Boolean);
     if (portfolio.length === 0) {
