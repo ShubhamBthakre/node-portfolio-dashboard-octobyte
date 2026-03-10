@@ -6,7 +6,7 @@ import { httpStatusCodes } from "../utils/httpStatusCodes.js";
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Run async tasks in small batches with delay to avoid Yahoo 429 rate limit. */
-async function runThrottled(tasks, concurrency = 2, delayMs = 700) {
+async function runThrottled(tasks, concurrency = 1, delayMs = 1100) {
   const results = [];
   for (let i = 0; i < tasks.length; i += concurrency) {
     const batch = tasks.slice(i, i + concurrency);
@@ -40,8 +40,8 @@ export async function fetchPortfolioEnriched() {
           dayChangePercent,
         };
       }),
-      2,
-      700,
+      1,
+      1100,
     );
 
     const portfolio = results.filter(Boolean);
