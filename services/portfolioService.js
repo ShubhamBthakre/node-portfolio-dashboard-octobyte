@@ -8,6 +8,8 @@ export async function fetchPortfolioEnriched() {
     const results = await Promise.all(
       portfolioData.map(async (stock) => {
         const market = await getStockData(stock.symbol);
+
+        console.log("market", market);
         if (!market || market.cmp == null) {
           return null;
         }
@@ -29,6 +31,8 @@ export async function fetchPortfolioEnriched() {
         };
       }),
     );
+
+    console.log("results", results);
 
     const portfolio = results.filter(Boolean);
     if (portfolio.length === 0) {
