@@ -7,10 +7,14 @@ const app = express();
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://next-portfolio-dashboard-octobyte.vercel.app",
-    ],
+    origin: (origin, callback) => {
+      const allowed =
+        !origin ||
+        origin === "http://localhost:3000" ||
+        origin === "https://next-portfolio-dashboard-octobyte.vercel.app" ||
+        /^https:\/\/next-portfolio-dashboard-octobyte[-a-z0-9]*\.vercel\.app$/.test(origin);
+      callback(null, allowed);
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
